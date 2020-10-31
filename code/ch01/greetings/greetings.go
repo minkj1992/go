@@ -11,6 +11,16 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+func randomFormat() string {
+	formats := []string {
+		"Hi, %v. Welcome!",
+		"Great to see you, %v!",
+		"Hail, %v Well met!",
+	}
+
+	return formats[rand.Intn(len(formats))]
+}
+
 
 func Hello(name string) (string, error) {
 	if name == ""{
@@ -21,12 +31,17 @@ func Hello(name string) (string, error) {
 	return msg, nil
 }
 
-func randomFormat() string {
-	formats := []string {
-		"Hi, %v. Welcome!",
-		"Great to see you, %v!",
-		"Hail, %v Weel met!",
-	}
+func Hellos(names []string) (map[string]string, error) {
+	msgs := make(map[string]string)
 
-	return formats[rand.Intn(len(formats))]
+	for _, name := range names {
+		msg, err := Hello(name)
+		if err != nil {
+			return nil, err
+		}
+		msgs[name] = msg
+
+	}
+	return msgs, nil
+
 }
