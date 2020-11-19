@@ -245,4 +245,217 @@ func main() {
 ```
 
 ## switch
-> https://edu.goorm.io/learn/lecture/2010/%ED%95%9C-%EB%88%88%EC%97%90-%EB%81%9D%EB%82%B4%EB%8A%94-%EA%B3%A0%EB%9E%AD-%EA%B8%B0%EC%B4%88/lesson/80288/swich%EB%AC%B8%EC%97%90-%EC%9D%98%ED%95%9C-%EC%84%A0%ED%83%9D%EC%A0%81-%EC%8B%A4%ED%96%89
+
+- switch 옆에 태그의 변수는 어느 자료형이든 쓸 수 있습니다. 
+- 태그의 값에 따라 case의 '라벨'과 일치하는 것을 찾고 일치하는 case의 구문을 수행합니다. 
+- Go언어에서는 switch 옆에 태그뿐만이 아니라 '표현식'을 쓰는 경우가 있습니다
+- if문과 달리 { }의 시작 브레이스를 같은 줄에 쓰지 않아도 실행 됩니다.
+- break 따로 입력하지 않아도 해당되는 case만 수행됩니다.
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var num int
+    fmt.Print("정수입력: ")
+    fmt.Scanln(&num)
+
+    switch num {
+        case 0:
+          fmt.Println("영")
+        case 1:
+          fmt.Println("일")
+        default:
+          fmt.Println("모르겠어요.")
+    }
+}
+```
+
+- 조건식 활용 switch case
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var a, b int
+
+    fmt.Print("Enter int a, b:")
+    fmt.Scanln(&a, &b)
+
+    switch {
+        case a>b:
+            //
+        case a<b:
+            //    
+        default:
+          fmt.Println("Don't know")
+    }
+}
+```
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var sel int
+    var num1, num2, result float32
+
+    fmt.Scanln(&sel)
+    fmt.Scanln(&num1, &num2)
+
+    switch  {
+    case condition:
+        
+    }
+}
+```
+
+## `break, continue, goto`
+
+#### break
+- for, switch, select 사용 가능
+- `break 레이블 이름` 이동 가능
+  - 빠져나온 블록의 스코프 skip
+```go
+// 무한 루프로 동작하지 않습니다.
+package main
+
+import "fmt"
+
+func main() {
+    i:=0
+    LABEL1:
+        for {
+            if i==0{
+                break LABEL1
+            }
+        }
+        fmt.Println("END")
+}
+```
+
+#### continue
+- break와 다르게 for 문과 연관해서 사용해야합니다.
+  - continue를 만날 경우 해당 반복문의 조건검사 부분으로 다시 이동하기 떄문
+
+#### goto
+- 사용하지 마라.
+  - break with label과 어떤 차이가 있지.. 진입점 1개만 가지고 있다는 것 말고는 차이가 없어 보이는데
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var num int
+
+    fmt.print("자연수 입력:")
+    fmt.Scanln(&num)
+
+    if num == 1 {
+        goto ONE
+    } else if num ==2 {
+        goto TWO
+    } else {
+        goto DEFAULT
+    }
+
+    ONE:
+        fmt.Print("1을 입력했습니다.\n")
+        goto END
+    TWO:
+        fmt.Print("2를 입력했습니다.\n")
+        goto END
+    OTHER:
+        fmt.Print("1이나 2를 입력하지 않으셨습니다!\n")
+    END:
+}
+```
+
+- 홀수 구구단
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var i, j int = 2, 1
+
+	for {
+		i += 1
+		if i == 10 {
+			break
+		}
+		if i%2 == 0 {
+			continue
+		}
+		for {
+			fmt.Printf("%d x %d = %d\n", i, j, i*j)
+			j += 1
+			if j == i+1 {
+				j = 1
+				break
+			}
+		}
+		fmt.Println()
+	}
+}
+```
+
+## Array
+> go에서는 2개 이상의 변수를 모아 놓은 것을 collection이라 칭함
+
+- go에서 배열은 static(정적, 고정된 크기)
+- `var 배열이름 [배열크기]자료형`
+- go에서 배열의 크기는 자료형을 구성하는 요소
+  - [3]int != [5]int 는 다른 타입으로 처리
+
+- 1차원 배열 선언 방법
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var arr1 [5]int
+	fmt.Println(arr1)
+
+	arr1 = [5]int{1, 2, 3, 4, 5}
+	fmt.Println(arr1, arr1[0], arr1[4])
+	// fmt.Println(arr1[-1]) (x)
+	// fmt.Println(arr1[1000]) (x)
+
+	arr2 := [4]int{4, 5, 6, 7}
+	// var arr2 [4]int = [4]int{4, 5, 6, 7}와 차이가 없을 듯
+	arr2[0] = 32
+	fmt.Println(arr2)
+
+	var arr3 = [...]int{9, 8, 7, 6, 5} // 자동 배열 크기 조절
+	fmt.Println(arr3, len(arr3))
+
+}
+
+```
+
+- 다차원 배열
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var a = [3][3]int{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+	fmt.Println(a[2][2]) // 9
+}
+
+```
