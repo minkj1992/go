@@ -460,4 +460,153 @@ func main() {
 
 ```
 
-https://edu.goorm.io/learn/lecture/2010/%ED%95%9C-%EB%88%88%EC%97%90-%EB%81%9D%EB%82%B4%EB%8A%94-%EA%B3%A0%EB%9E%AD-%EA%B8%B0%EC%B4%88/lesson/81406/%EC%8A%AC%EB%9D%BC%EC%9D%B4%EC%8A%A4-slice
+## 슬라이스 (Slice)
+- 자료형으로 취급
+- 동적으로 크기 변경 가능한 배열
+- **배열과 달리 선언만 하면, 배열의 일부분을 가리키는 포인터만 생성** 
+  - 즉 실제 배열 메모리 공간은 생성 x
+  - 즉 배열 처럼 0으로 자동 초기화 x
+  - 이는 동적으로 사이즈가 조절 되니 어느 부분까지 0으로 초기화 해야할지 모르기 때문
+- 슬라이스의 초기 값을 지정하지 않고 선언만 한다면 `Nil silce`가 된다..
+- make()를 활용하면 선언과 초기화를 동시에 진행 가능
+- `[]int{1,2,3,4}`와 같은 식으로 입력하여 값을 초기화하면 새로운 메모리를 할당하면서 그 전의 값은 없어집니다.
+- 
+
+- `go/src/runtime/slice.go`
+```go
+type slice struct {
+	array unsafe.Pointer // 포인터
+	len   int // 배열 길이
+	cap   int // 메모리(배열 생성 시 overflow 체크)
+}
+```
+
+
+- 선언 방법
+```go
+var array [5]int // 배열 자동 초기화 방법
+var slicBad []int // (X) 메모리 공간 생성 하지 않습니다.
+var sliceGood []int = []int{1, 2, 3, 4} // (O)
+```
+
+`sliceGood`은 선언과 동시에 1,2,3,4를 위한 메모리를 만든다는 뜻
+
+#### 슬라이스 복사
+배열은 다른 배열의 값을 대입하면, 값 자체가 대입되지만, 슬라이스는 참조 타입이기 때문에 **슬라이스를 복사해온다는 것은 address를 참조한다는 뜻** 입니다.
+
+예를 들면 `l = slice[2:5]`는 slice 에서 2,3,4 인덱스를 참조한다는 뜻입니다.
+
+
+- 슬라이스 생성 예시
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var a []int
+	a = []int{1, 2, 3}
+	a[1] = 10
+
+	fmt.Println(a)
+
+	var b []int
+
+	if b == nil {
+		fmt.Println("용량이", cap(b), "길이가", len(b), " Nil Slice입니다.") // 용량이 0 길이가 0  Nil Slice입니다.
+	}
+}
+
+```
+
+#### make() 이용한 슬라이스 선언
+> 선언만 해도 초기화 가능한 방법 make()
+-  `make(슬라이스 타입, 슬라이스 길이, 슬라이스의 용량)`
+   -  cap 생략 가능, 이때는 cap이 len과 같은 값으로 선언 됩니다.
+   - 모든 요소가 0인 슬라이스 생성
+
+
+#### append()
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	s := make([]int, 0, 3)
+
+	for i := 1; i <= 10; i++ {
+		s = append(s, i)
+		fmt.Println(len(s), cap(s))
+	}
+	fmt.Println(s)
+}
+
+```
+
+- 확인해본다면 cap은 double로 사이즈를 늘려나간다.
+- 좀 더 구체적으로는 "용량이 초과하는 경우에는 설정한 용량만큼 새로운 배열을 생성하고 기존 배열 값들을 모두 새 배열에 복제한 후 다시 슬라이스를 할당하는 방식" 입니다.
+
+- `append()`
+```go
+package main
+
+import "fmt"
+
+func main() {
+	sliceA := []int{1, 2, 3}
+	sliceB := []int{4, 5, 6}
+
+	sliceA = append(sliceA, sliceB...)
+
+	fmt.Println(sliceA) // [1 2 3 4 5 6]
+	fmt.Println(sliceB) // [4 5 6]
+}
+```
+
+- `copy()`
+```go
+package main
+
+import "fmt"
+
+func main() {
+	sliceA := []int{0, 1, 2}
+	sliceB := make([]int, len(sliceA), cap(sliceA)*2)
+
+	copy(sliceB, sliceA)              // A를 B에 붙인다.
+	fmt.Println(sliceB)               // standart lib
+	println(len(sliceB), cap(sliceB)) // 디버깅용 사용, fmt 쓰는게 맞다.
+
+}
+```
+
+- shallowcopy vs deepcopy
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	c := make([]int, 0, 3) //용량이 3이고 길이가0인 정수형 슬라이스 선언
+	c = append(c, 1, 2, 3, 4, 5, 6, 7)
+	fmt.Println(len(c), cap(c)) // 7,8
+
+	shallow := c[1:3] //인덱스 1요소부터 2요소까지 복사
+	shallow[0] = -1
+	fmt.Println(shallow) // [-1 3]
+
+	fmt.Println(c) //슬라이스 l의 값을 바꿨는데 c의 값도 바뀜
+	//값을 복사해온 것이 아니라 기존 슬라이스 주솟값을 참조
+	// [1 -1 3 4 5 6 7]
+
+	deep := make([]int, len(c))
+	copy(deep, c)
+
+	deep[0] = -1
+	fmt.Println(c, deep) // [1 -1 3 4 5 6 7] [-1 -1 3 4 5 6 7]
+}
+
+```
