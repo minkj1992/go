@@ -460,7 +460,7 @@ func main() {
 
 ```
 
-## 슬라이스 (Slice)
+## Slice
 - 자료형으로 취급
 - 동적으로 크기 변경 가능한 배열
 - **배열과 달리 선언만 하면, 배열의 일부분을 가리키는 포인터만 생성** 
@@ -610,3 +610,334 @@ func main() {
 }
 
 ```
+
+## map
+
+- 슬라이스와 맵의 공통점은 두 컬랙션 모두 값을 직접적으로 저장하는 것이 아닌 `참조 타입(Reference type)`
+- `var 맵이름 map[key자료형]value자료형`
+  - ex) `var a map[int]string`로 선언 하면 `Nil map`생성
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func main() {
+	var m1 map[int]string
+
+	fmt.Println(m1)                 // map[]
+	fmt.Println(reflect.TypeOf(m1)) // map[int]string
+	fmt.Println(m1 == nil)          // true
+
+	var m2 = map[string]string{
+		"a": "a",
+		"b": "b",
+		"c": "c",
+	}
+
+	fmt.Println(m2, len(m2))        // map[a:a b:b c:c] 3
+	fmt.Println(reflect.TypeOf(m2)) // map[string]string
+}
+
+```
+
+#### map add, update, delete
+
+- add: `m[key]=value`
+- update: `m[key]=newValue`
+- delete: `delete(m, key)`
+
+#### map 읽기
+
+- index based collection들은(array, slice) idx 넘어가면 에러
+- 그러나, map의 경우 key 유무에 따라 true/false 값을 반환합니다. (자료형에 따라 0이나 "")
+
+- 동작 방식
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var m = make(map[int]int)
+	m[1] = 1
+
+	fmt.Println(m[1]) // 1
+	fmt.Println(m[2]) // 0
+	// fmt.Println(m["삼"]) // type untyped string
+
+	v1, isExist1 := m[1] // value, bool
+	v2, isExist2 := m[2]
+
+	fmt.Println(v1, isExist1) // 1 true
+	fmt.Println(v2, isExist2) // 0 false
+
+	v1, _ = m[1]
+	_, isExist1 = m[1]
+}
+```
+
+## func
+
+- `func 함수이름 (변수이름 변수타입) 반환형`
+  - ex) `func f1 (a int) int {}`
+- '반환값'이 여러 개일 수 있다. 이럴 때는 '반환형'을 괄호로 묶어 개수만큼 입력해야한다. `(반환형1, 반환형2)`형식, **두 형이 같더라도 두 번 써야 한다**
+- **블록 시작 브레이스({)가 함수 선언과 동시에 첫 줄에 있어야 한다**(모든 용법을 이렇게 쓰는 것이 좋습니다).
+
+```go
+package main
+
+import "fmt"
+
+func guide() {
+	fmt.Println("Type 2 int with space:")
+}
+
+func input() (int, int) {
+	var a, b int
+	fmt.Scanln(&a, &b)
+	return a, b
+}
+
+func multi(a, b int) int {
+	return a * b
+}
+
+func printResult(num int) {
+	fmt.Printf("Answer is %d\n", num)
+}
+
+func main() {
+	guide()
+	num1, num2 := input()
+	result := multi(num1, num2)
+	printResult(result)
+}
+```
+
+## Pass by reference
+> 매개변수
+
+#### C vs Go
+- C언어에서는 배열이름 자체가 배열의 첫번째 인덱스 요소의 주솟값인데 Go언어는 그런 것이 없습니다. 
+  - go에서는 **주솟값은 어떤 변수 앞에 &를 붙이는 것** 정도 기억
+- C언어에서는 "*(배열이름+인덱스)"는 "배열이름[인덱스]"와 같은 기능을 했는데 Go언어는 그런 것이 없습니다. **직접 참조를 원하면 포인터 변수 앞에 *를 붙이**는 것만 기억
+- pass by ref로 전달된 address value는 *로 직접참조 해야 사용 가능
+
+```go
+package main
+
+import "fmt"
+
+func printSquare(a *int) {
+	// ref의 값 변경
+	*a *= *a
+}
+
+func main() {
+	a := 4
+	printSquare(&a)
+	fmt.Println(a) //16
+
+}
+```
+
+## variable argument (가변 인자(= 가변 인수))
+> '가변 인자 함수'는 전달하는 매개변수의 개수를 고정한 함수가 아니라 함수를 호출할 때마다 매개변수의 개수를 다르게 전달할 수 있도록 만든 함수
+
+- Go언어의 가변 인자 함수는 동일한 형의 매개변수를 n개 전달 가능
+- n개의 동일한 형의 매개변수를 전달
+- 전달된 변수들은 `슬라이스 타입`
+- `func 함수이름(매개변수이름 ...매개변수형) 반환형`
+  - ex) `func f(nums ...int) int {}`
+
+```go
+package main
+
+import "fmt"
+
+func sum(nums ...int) int {
+	var result int
+	for _, v := range nums {
+		result += v
+	}
+	return result
+}
+
+func main() {
+	nums := []int{1, 2, 3, 4, 5}
+	fmt.Println(sum(nums...))
+}
+
+```
+
+## Named Return Parameter
+> 이름이 붙여진 반환 값
+
+- 여러 개의 값을 반환할때 타입이 다양하면 가독성이 좋지 못하다.
+- 따라서 Named return parameter를 사용
+
+- 특징
+  - (반환값이름1 반환형1, 반환값이름2 반환형2, 반환값이름3 반환형3, ...)
+    - 주의 할 점은 반환형 자체가 변수 선언입니다.
+  - `return`은 반드시 명시해주어야 한다.
+  - 반환 값이 하나라도 명시한다면 괄호 안에 써주어야 합니다.
+
+```go
+package main
+
+import "fmt"
+
+func memberList(names ...string) (count int, list []string) {
+	for _, name := range names {
+		list = append(list, name)
+		count++
+	}
+	return
+}
+
+func inputMember() (list []string) {
+	for {
+		var name string
+
+		fmt.Println("이름을 입력하시오:")
+		fmt.Scanln(&name)
+
+		if name == "0" {
+			break
+		} else {
+			list = append(list, name)
+		}
+	}
+	return
+}
+
+func main() {
+	count, list := memberList(inputMember()...) //함수를 변수처럼 사용할 수 있습니다
+
+	fmt.Println(count, list) // 6 [john peter kayden leoo victoria martin]
+}
+```
+
+## Anonymous func(익명함수)
+
+- 이름있는 함수의 단점: **프로그램 속도 저하**
+  - 함수 선언 자체가 프로그래밍 전역으로 초기화되면서 메모리를 잡아먹기 때문입니다.
+  - 기능을 수행할 때마다 함수를 찾아서 호출해야하기 때문입니다.
+
+```go
+package main
+
+import "fmt"
+
+func addDeclared(nums ...int) (result int) {
+	for _, v := range nums {
+		result += v
+	}
+	return
+}
+
+func main() {
+	var nums = []int{1, 2, 3, 4, 5, 6, 7}
+
+	addAnonymous := func(nums ...int) (result int) {
+		for _, v := range nums {
+			result += v
+		}
+		return
+	}
+
+	fmt.Println(addDeclared(nums...)) // 28
+	fmt.Println(addAnonymous(nums...)) // 28
+}
+```
+
+- 결과는 같지만 선언 함수와 익명함수는 내부적으로 읽는 순서가 다릅니다.
+- 선언함수는 프로그램 시작과 동시에 읽어들이지만, 익명함수는 자신의 자리에서 실행되기 때문에 실제 선언된 곳에서 읽혀집니다. (전역변수와 지역변수)
+
+## First-Class Func (일급 함수)
+
+- 일급함수
+  - 함수를 args(인자)로 전달
+  - 함수를 변수에 할당
+  - 함수를 reuturn
+
+
+
+```go
+package main
+
+import "fmt"
+
+func calc(f func(int, int) int, a int, b int) int {
+	result := f(a, b)
+	return result
+}
+
+func main() {
+	multi := func(i int, j int) int {
+		return i * j
+	}
+
+	r1 := calc(multi, 10, 20) //200
+	r2 := calc(func(x int, y int) int { return x + y }, 10, 20) // 30
+
+	fmt.Println(r1)
+	fmt.Println(r2)
+}
+```
+
+## type문을 사용한 함수 원형 정의
+> 함수를 인자로 사용할때 args type, return type이 늘어나면 가독성이 떨어진다. 이를 해결
+
+- 함수의 원형 type을 만들어 가독성을 늘리자
+
+```go
+package main
+
+import "fmt"
+import s "strings"
+
+type numCalculator func([]int) int
+type strCalculator func([]string) string
+
+func calNum(f numCalculator, nums ...int) int {
+	result := f(nums)
+	return result
+}
+
+func calStr(f strCalculator, str ...string) string {
+	result := f(str)
+	return result
+}
+
+func main() {
+	sum := func(nums ...int) (total int) {
+		for _, v := range nums {
+			total += v
+		}
+		return
+	}
+
+	dupStr := func(str ...string) (total string) {
+		for _, v := range str {
+			total += v
+		}
+		return s.Repeat(total, 2)
+	}
+
+	nums := [5]int{1, 2, 3, 4, 5}
+	r1 := calNum(sum, nums...)                    // TODO: 에러
+	r2 := calStr(dupStr, "a", "b", "c", "d", "e") // TODO: 에러
+
+	fmt.Println(r1)
+	fmt.Println(r2)
+}
+
+```
+
+## Closure
+> https://edu.goorm.io/learn/lecture/2010/%ED%95%9C-%EB%88%88%EC%97%90-%EB%81%9D%EB%82%B4%EB%8A%94-%EA%B3%A0%EB%9E%AD-%EA%B8%B0%EC%B4%88/lesson/81717/%EC%99%B8%EB%B6%80-%EB%B3%80%EC%88%98-%EC%A0%91%EA%B7%BC-%ED%81%B4%EB%A1%9C%EC%A0%80
