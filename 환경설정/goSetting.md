@@ -107,5 +107,3 @@ require github.com/webgenie/go-in-action v0.0.0-20160424215153-d6068f2ca89b // i
 ```
 
 **즉 정리하자면, go run에 필요한 bin파일들은 `GOPATH`에 저장되며 실행시 해당 링크를 통해 참조를 실행한다.단 build로 생성된 `실행파일`의 경우 실제로 사용하는 `3rd lib 파일`들을 contains 하는지는 다른 주제로 알아야 할 듯 싶다.**
-
-> go mod를 사용하게 되면 
